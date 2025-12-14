@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dataset Finder - 数据集管理工具</title>
+    <meta name="description" content="轻量级、隐私安全的数据集管理工具,支持YOLO、COCO、Pascal VOC格式">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📊 Dataset Finder</h1>
+            <p>轻量级数据集管理工具 - 支持 YOLO、COCO、Pascal VOC 格式</p>
+        </header>
+
+        <!-- Scan Configuration Section -->
+        <section class="config-section">
+            <div class="input-container">
+                <div class="path-input-group">
+                    <input type="text" id="pathInput" placeholder="请输入数据集绝对路径 (例如: /data/coco/dateset)"
+                        autocomplete="off">
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-outline btn-large" id="browseBtn">
+                        📂 浏览服务器文件夹...
+                    </button>
+                    <button class="btn btn-primary btn-large" id="scanBtn">
+                        🚀 开始分析
+                    </button>
+                </div>
+            </div>
+
+            <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem; text-align: center;">
+                💡 提示: 无论是本地还是远程服务器,请确保输入的是服务器上的绝对路径。
+            </p>
+        </section>
+
+        <!-- Directory Browser Modal -->
+        <div class="modal-overlay" id="dirModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>选择服务器文件夹</h3>
+                    <button class="close-btn" id="closeModalBtn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="path-navigator">
+                        <span id="currentPathDisplay">/</span>
+                    </div>
+                    <ul class="dir-list" id="dirList">
+                        <!-- Directory items will be inserted here -->
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancelModalBtn">取消</button>
+                    <button class="btn btn-primary" id="confirmModelBtn" disabled>选择此文件夹</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <section class="results-section hidden" id="resultsSection">
+            <div class="results-header">
+                <h2>分析结果</h2>
+                <button class="btn btn-secondary" id="exportBtn">
+                    📥 导出 Excel
+                </button>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalClasses">0</div>
+                    <div class="stat-label">类别总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalAnnotations">0</div>
+                    <div class="stat-label">标注总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalFiles">0</div>
+                    <div class="stat-label">文件总数</div>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="🔍 搜索类别名称...">
+            </div>
+
+            <!-- Data Table -->
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th data-sort="class_name" style="width: 15%">类别名称 ▼</th>
+                            <th data-sort="types" style="width: 15%">标注类型</th>
+                            <th data-sort="annotations" style="width: 10%">标注数 ▼</th>
+                            <th data-sort="files" style="width: 10%">文件数 ▼</th>
+                            <th style="width: 50%">存储路径 (点击展开)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Loading Indicator -->
+        <div class="loading hidden" id="loadingIndicator">
+            <div class="spinner"></div>
+            <p style="margin-top: 1rem; color: var(--text-secondary);">正在分析数据集...</p>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>
