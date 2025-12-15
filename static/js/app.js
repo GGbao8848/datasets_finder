@@ -444,8 +444,11 @@ async function exportToExcel() {
  * Copy text to clipboard
  */
 function copyToClipboard(text, button) {
-    navigator.clipboard.writeText(text).then(() => {
+    const showSuccess = () => {
         const originalText = button.textContent;
+        // Helper to check if text is just an emoji or icon
+        const isIcon = originalText.length <= 2 || originalText.trim().match(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]$/u);
+        
         button.textContent = '✓';
         button.style.color = 'var(--success-color)';
 
@@ -455,22 +458,48 @@ function copyToClipboard(text, button) {
         }, 1500);
 
         showToast('路径已复制到剪贴板', 'success');
-    }).catch(err => {
-        console.error('Failed to copy. Trying fallback...', err);
-        // Fallback for non-HTTPS or frame issues
+    };
+
+    const useFallback = () => {
         const textArea = document.createElement("textarea");
         textArea.value = text;
+        
+        // Ensure textarea is not visible but part of DOM so it can be selected
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
+        
         document.body.appendChild(textArea);
+        textArea.focus();
         textArea.select();
+        
         try {
-            document.execCommand('copy');
-            showToast('路径已复制到剪贴板', 'success');
+            const successful = document.execCommand('copy');
+            if (successful) {
+                showSuccess();
+            } else {
+                throw new Error('execCommand returned false');
+            }
         } catch (err) {
             console.error('Fallback copy failed', err);
-            showToast('复制失败,请手动复制', 'error');
+            showToast('复制失败: ' + (err.message || 'Unknown error'), 'error');
+        } finally {
+            document.body.removeChild(textArea);
         }
-        document.body.removeChild(textArea);
-    });
+    };
+
+    // Check if Clipboard API is supported and available (it might be undefined in non-secure contexts)
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+            .then(() => showSuccess())
+            .catch(err => {
+                console.error('Clipboard API failed, attempting fallback...', err);
+                useFallback(); // Fallback if promise rejects
+            });
+    } else {
+        console.log('Clipboard API unavailable, using fallback...');
+        useFallback(); // Fallback if API not exists
+    }
 }
 
 /**
