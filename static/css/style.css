@@ -504,6 +504,7 @@ tbody td {
     background: var(--success-color);
 }
 
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -514,4 +515,43 @@ tbody td {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* History Section */
+.history-section {
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.history-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.history-item {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 99px;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    word-break: break-all;
+}
+
+.history-item:hover {
+    background-color: var(--primary-light);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }

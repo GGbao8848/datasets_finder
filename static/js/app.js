@@ -25,7 +25,13 @@ const closeModalBtn = document.getElementById('closeModalBtn');
 const cancelModalBtn = document.getElementById('cancelModalBtn');
 const confirmModelBtn = document.getElementById('confirmModelBtn');
 const dirList = document.getElementById('dirList');
-const currentPathDisplay = document.getElementById('currentPathDisplay');
+// History Elements
+const historySection = document.getElementById('historySection');
+const historyList = document.getElementById('historyList');
+
+const MAX_HISTORY = 10;
+const HISTORY_KEY = 'dataset_finder_history';
+
 
 // Event Listeners
 browseBtn.addEventListener('click', openBrowserModal);
@@ -191,8 +197,10 @@ async function startAnalysis() {
         if (data.success) {
             analysisResults = data.data;
             displayResults(analysisResults);
+            saveToHistory(path);
             showToast('分析完成!', 'success');
         } else {
+
             throw new Error(data.error || '未知错误');
         }
     } catch (error) {
@@ -448,7 +456,7 @@ function copyToClipboard(text, button) {
         const originalText = button.textContent;
         // Helper to check if text is just an emoji or icon
         const isIcon = originalText.length <= 2 || originalText.trim().match(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]$/u);
-        
+
         button.textContent = '✓';
         button.style.color = 'var(--success-color)';
 
@@ -463,16 +471,16 @@ function copyToClipboard(text, button) {
     const useFallback = () => {
         const textArea = document.createElement("textarea");
         textArea.value = text;
-        
+
         // Ensure textarea is not visible but part of DOM so it can be selected
         textArea.style.position = 'fixed';
         textArea.style.left = '-9999px';
         textArea.style.top = '0';
-        
+
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        
+
         try {
             const successful = document.execCommand('copy');
             if (successful) {
@@ -530,5 +538,74 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+/**
+ * Save path to history in localStorage
+ */
+function saveToHistory(path) {
+    let history = getHistory();
+
+    // Remove if already exists (to move to top)
+    history = history.filter(h => h !== path);
+
+    // Add to top
+    history.unshift(path);
+
+    // Limit size
+    if (history.length > MAX_HISTORY) {
+        history = history.slice(0, MAX_HISTORY);
+    }
+
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    renderHistory();
+}
+
+/**
+ * Get history from localStorage
+ */
+function getHistory() {
+    const historyStr = localStorage.getItem(HISTORY_KEY);
+    try {
+        return historyStr ? JSON.parse(historyStr) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+/**
+ * Render history items
+ */
+function renderHistory() {
+    const history = getHistory();
+
+    if (history.length === 0) {
+        historySection.classList.add('hidden');
+        return;
+    }
+
+    historySection.classList.remove('hidden');
+    historyList.innerHTML = '';
+
+    history.forEach(path => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.title = path;
+        item.textContent = path;
+        item.onclick = () => {
+            pathInput.value = path;
+            startAnalysis();
+        };
+        historyList.appendChild(item);
+    });
+}
+
+/**
+ * Load history on startup
+ */
+function loadHistory() {
+    renderHistory();
+}
+
 // Initialize
 console.log('Dataset Finder initialized');
+loadHistory();
+
