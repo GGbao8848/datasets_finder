@@ -31,11 +31,12 @@ const historyList = document.getElementById('historyList');
 
 const MAX_HISTORY = 10;
 const HISTORY_KEY = 'dataset_finder_history';
+const CACHE_KEY = 'dataset_finder_results_cache';
 
 
 // Event Listeners
 browseBtn.addEventListener('click', openBrowserModal);
-scanBtn.addEventListener('click', startAnalysis);
+scanBtn.addEventListener('click', () => startAnalysis());
 closeModalBtn.addEventListener('click', closeBrowserModal);
 cancelModalBtn.addEventListener('click', closeBrowserModal);
 confirmModelBtn.addEventListener('click', confirmSelection);
@@ -168,11 +169,22 @@ function renderDirList(data) {
 /**
  * Start Analysis
  */
-async function startAnalysis() {
-    const path = pathInput.value.trim();
+async function startAnalysis(specificPath = null, useCache = false) {
+    const path = (specificPath || pathInput.value).trim();
     if (!path) {
         showToast('请输入或选择数据集路径', 'error');
         return;
+    }
+
+    // Check Cache
+    if (useCache) {
+        const cachedResults = getCachedResults(path);
+        if (cachedResults) {
+            analysisResults = cachedResults;
+            displayResults(analysisResults);
+            showToast('从缓存中加载成功!!!如果服务器数据有更新,请点击"开始分析",重新加载数据', 'success');
+            return;
+        }
     }
 
     try {
@@ -196,11 +208,11 @@ async function startAnalysis() {
 
         if (data.success) {
             analysisResults = data.data;
+            saveToCache(path, analysisResults);
             displayResults(analysisResults);
             saveToHistory(path);
             showToast('分析完成!', 'success');
         } else {
-
             throw new Error(data.error || '未知错误');
         }
     } catch (error) {
@@ -210,6 +222,35 @@ async function startAnalysis() {
         loadingIndicator.classList.add('hidden');
         scanBtn.disabled = false;
     }
+}
+
+/**
+ * Get results from cache
+ */
+function getCachedResults(path) {
+    const cacheStr = sessionStorage.getItem(CACHE_KEY);
+    if (!cacheStr) return null;
+    try {
+        const cache = JSON.parse(cacheStr);
+        return cache[path] || null;
+    } catch (e) {
+        return null;
+    }
+}
+
+/**
+ * Save results to cache
+ */
+function saveToCache(path, results) {
+    let cache = {};
+    const cacheStr = sessionStorage.getItem(CACHE_KEY);
+    if (cacheStr) {
+        try {
+            cache = JSON.parse(cacheStr);
+        } catch (e) { }
+    }
+    cache[path] = results;
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify(cache));
 }
 
 /**
@@ -631,7 +672,7 @@ function renderHistory() {
 
         item.onclick = () => {
             pathInput.value = path;
-            startAnalysis();
+            startAnalysis(path, true); // Use cache for history items
         };
 
         item.appendChild(textSpan);

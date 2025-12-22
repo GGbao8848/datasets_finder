@@ -485,15 +485,15 @@ tbody td {
 /* Toast */
 .toast {
     position: fixed;
-    bottom: 2rem;
+    top: 2rem;
     right: 2rem;
     background: var(--text-primary);
     color: white;
     padding: 0.75rem 1.5rem;
-    border-radius: var(--radius-md);
+    border-radius: 0;
     box-shadow: var(--shadow-lg);
     z-index: 2000;
-    animation: fadeIn 0.3s;
+    animation: slideInRight 0.3s ease-out;
 }
 
 .toast.error {
@@ -504,6 +504,17 @@ tbody td {
     background: var(--success-color);
 }
 
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
 
 @keyframes fadeIn {
     from {
