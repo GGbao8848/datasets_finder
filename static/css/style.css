@@ -547,11 +547,31 @@ tbody td {
     color: var(--text-secondary);
     cursor: pointer;
     transition: var(--transition);
-    word-break: break-all;
+    transition: var(--transition);
+    /* word-break: break-all; - removing this to avoid weird breaking with flex */
+    max-width: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .history-item:hover {
     background-color: var(--primary-light);
     border-color: var(--primary-color);
     color: var(--primary-color);
+}
+
+.history-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    opacity: 0.5;
+    transition: var(--transition);
+    padding: 2px;
+}
+
+.history-delete-btn:hover {
+    color: var(--danger-color);
+    opacity: 1;
 }

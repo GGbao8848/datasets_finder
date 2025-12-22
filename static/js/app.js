@@ -573,6 +573,16 @@ function saveToHistory(path) {
 }
 
 /**
+ * Remove path from history
+ */
+function deleteFromHistory(path) {
+    let history = getHistory();
+    history = history.filter(h => h !== path);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    renderHistory();
+}
+
+/**
  * Get history from localStorage
  */
 function getHistory() {
@@ -602,11 +612,31 @@ function renderHistory() {
         const item = document.createElement('div');
         item.className = 'history-item';
         item.title = path;
-        item.textContent = path;
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = path;
+        // Make text truncation work if needed, though flex handles it well usually
+        textSpan.style.overflow = 'hidden';
+        textSpan.style.textOverflow = 'ellipsis';
+        textSpan.style.whiteSpace = 'nowrap';
+
+        const deleteBtn = document.createElement('span');
+        deleteBtn.className = 'history-delete-btn';
+        deleteBtn.innerHTML = '×';
+        deleteBtn.title = '删除';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            deleteFromHistory(path);
+        };
+
         item.onclick = () => {
             pathInput.value = path;
             startAnalysis();
         };
+
+        item.appendChild(textSpan);
+        item.appendChild(deleteBtn);
+
         historyList.appendChild(item);
     });
 }
