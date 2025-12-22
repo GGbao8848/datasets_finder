@@ -301,6 +301,9 @@ function renderTable(classes) {
                  <button class="copy-btn-sm" data-copy-all="${index}">
                     📑 复制全部
                 </button>
+                <button class="copy-btn-sm" data-copy-formatted="${index}" style="margin-left: 8px;">
+                    📝 格式化复制
+                </button>
             </div>
         `;
 
@@ -310,6 +313,16 @@ function renderTable(classes) {
             e.preventDefault();
             e.stopPropagation();
             copyToClipboard(allPaths, copyAllBtn);
+        });
+
+        // Custom event handler for Formatted Copy
+        const copyFormattedBtn = summary.querySelector(`[data-copy-formatted="${index}"]`);
+        copyFormattedBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Format: "path" \ (with trailing backslash on every line as per request)
+            const formattedPaths = classData.locations.map(path => `"${path}" \\`).join('\n');
+            copyToClipboard(formattedPaths, copyFormattedBtn);
         });
 
         const listDiv = document.createElement('div');
