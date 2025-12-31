@@ -28,6 +28,8 @@ const dirList = document.getElementById('dirList');
 // History Elements
 const historySection = document.getElementById('historySection');
 const historyList = document.getElementById('historyList');
+const quickLinkItems = document.querySelectorAll('.quick-link-item');
+const reloadAllBtn = document.getElementById('reloadAllBtn');
 
 const MAX_HISTORY = 10;
 const HISTORY_KEY = 'dataset_finder_history';
@@ -42,6 +44,18 @@ cancelModalBtn.addEventListener('click', closeBrowserModal);
 confirmModelBtn.addEventListener('click', confirmSelection);
 searchInput.addEventListener('input', filterTable);
 exportBtn.addEventListener('click', exportToExcel);
+quickLinkItems.forEach(item => {
+    item.addEventListener('click', () => {
+        const path = item.dataset.path || item.textContent.trim();
+        if (!path) return;
+        pathInput.value = path;
+        startAnalysis(path, true);
+    });
+});
+
+if (reloadAllBtn) {
+    reloadAllBtn.addEventListener('click', reloadAllQuickLinks);
+}
 
 // Close modal on outside click
 dirModal.addEventListener('click', (e) => {
@@ -689,7 +703,93 @@ function loadHistory() {
     renderHistory();
 }
 
+/**
+ * Reload all quick links from server and cache results
+ */
+async function reloadAllQuickLinks(e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+
+    if (reloadAllBtn.classList.contains('loading')) return;
+
+    const items = document.querySelectorAll('.quick-link-item');
+    const itemArray = Array.from(items);
+
+    // Check if any items exist
+    if (itemArray.length === 0) {
+        showToast('没有找到快速链接', 'error');
+        return;
+    }
+
+    // Reset all progress bars
+    itemArray.forEach(item => {
+        const bar = item.querySelector('.progress-bar');
+        if (bar) {
+            bar.className = 'progress-bar'; // Reset classes
+        }
+    });
+
+    reloadAllBtn.classList.add('loading');
+    showToast(`开始更新 ${itemArray.length} 个数据集缓存...`, 'success');
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < itemArray.length; i++) {
+        const item = itemArray[i];
+        const path = (item.dataset.path || item.textContent).trim();
+        const bar = item.querySelector('.progress-bar');
+
+        if (!path) continue;
+
+        if (bar) {
+            bar.classList.add('loading');
+        }
+
+        try {
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path })
+            });
+
+            if (!response.ok) throw new Error('Network error');
+
+            const data = await response.json();
+
+            if (bar) {
+                bar.classList.remove('loading');
+            }
+
+            if (data.success) {
+                saveToCache(path, data.data);
+                if (bar) bar.classList.add('success');
+                successCount++;
+            } else {
+                if (bar) bar.classList.add('error');
+                failCount++;
+            }
+        } catch (err) {
+            console.error(`Failed to reload ${path}:`, err);
+            if (bar) {
+                bar.classList.remove('loading');
+                bar.classList.add('error');
+            }
+            failCount++;
+        }
+    }
+
+    reloadAllBtn.classList.remove('loading');
+
+    if (failCount === 0) {
+        showToast(`所有 ${successCount} 个数据集已更新缓存!`, 'success');
+    } else {
+        showToast(`更新完成: ${successCount} 成功, ${failCount} 失败`, 'warning');
+    }
+}
+
 // Initialize
 console.log('Dataset Finder initialized');
 loadHistory();
-
